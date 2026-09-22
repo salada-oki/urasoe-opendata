@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>浦添市 人口ピラミッド・推移ダッシュボード</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>浦添市 人口ピラミッド・推移ダッシュボード</h1>
+    <p>浦添市が公開する年齢別・男女別人口データをもとに可視化しています。</p>
+  </header>
+
+  <div id="error-message" hidden></div>
+
+  <main>
+    <section id="controls">
+      <label for="year-month-select">表示する年月</label>
+      <select id="year-month-select"></select>
+    </section>
+
+    <section id="summary">
+      <div>
+        <span>総人口</span>
+        <strong id="summary-total">-</strong>
+      </div>
+      <div>
+        <span>高齢化率</span>
+        <strong id="summary-elderly-rate">-</strong>
+      </div>
+    </section>
+
+    <section id="pyramid-section">
+      <h2>年齢別人口ピラミッド</h2>
+      <canvas id="pyramid-chart"></canvas>
+    </section>
+
+    <section id="trend-section">
+      <h2>年齢区分別 人口推移</h2>
+      <canvas id="trend-chart"></canvas>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
