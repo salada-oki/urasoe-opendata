@@ -118,16 +118,16 @@ test("ageGroupTotals aggregates into child/working/elderly buckets per month", (
   const records = parseCsvText(SAMPLE_CSV);
   const result = ageGroupTotals(records);
   assert.deepEqual(result, [
-    { year_month: "202401", child: 98, working: 118, elderly: 65, total: 281 },
-    { year_month: "202402", child: 96, working: 120, elderly: 67, total: 283 },
+    { year_month: "202401", child: 199, working: 118, elderly: 65, total: 382 },
+    { year_month: "202402", child: 199, working: 120, elderly: 67, total: 386 },
   ]);
 });
 
 test("summaryForMonth returns total and elderly rate", () => {
   const records = parseCsvText(SAMPLE_CSV);
   const result = summaryForMonth(records, "202401");
-  assert.equal(result.total, 281);
-  assert.ok(Math.abs(result.elderlyRate - 65 / 281) < 1e-9);
+  assert.equal(result.total, 382);
+  assert.ok(Math.abs(result.elderlyRate - 65 / 382) < 1e-9);
 });
 
 test("summaryForMonth returns null for unknown month", () => {
@@ -522,7 +522,7 @@ Run: `cd docs && python -m http.server 8000`
 - 年月セレクタに `202401`・`202402` が表示され、初期値が `202402` になっている
 - 人口ピラミッド(横棒グラフ)が表示され、セレクタを `202401` に変えると描画が更新される
 - 推移グラフ(折れ線3本)が表示される
-- 総人口・高齢化率の数値が選択中の年月に応じて表示される(`202401`なら総人口281、高齢化率23.1%)
+- 総人口・高齢化率の数値が選択中の年月に応じて表示される(`202401`なら総人口382、高齢化率17.0%)
 確認後、サーバーを停止する(Ctrl+C)。
 
 - [ ] **Step 4: エラー表示を手動確認する**
