@@ -1,0 +1,41 @@
+name: Urasoe Population Data - Monthly Fetch
+
+on:
+  schedule:
+    # 浦添市の公開タイミングが確定していないため、毎月5日・15日・25日の
+    # JST 9:00頃（=UTC 0:00）に実行して新しいPDFが出ていないか確認する。
+    - cron: "0 0 5,15,25 * *"
+  workflow_dispatch: {}  # 手動実行用（Actionsタブから「Run workflow」で実行可能）
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch latest months
+        run: python scripts/urasoe_population.py latest --lookback 3
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "変更なし（新しいデータはありませんでした）"
+          else
+            git commit -m "chore: update population data ($(date +'%Y-%m-%d'))"
+            git push
+          fi
