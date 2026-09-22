@@ -9,16 +9,30 @@ export function parseCsvText(text) {
     female: header.indexOf("female"),
     total: header.indexOf("total"),
   };
+  if (idx.year_month === -1 || idx.age === -1 || idx.male === -1 || idx.female === -1 || idx.total === -1) {
+    console.warn("parseCsvText: missing required column in header");
+    return [];
+  }
   const records = [];
   for (let i = 1; i < lines.length; i++) {
     const cols = lines[i].split(",");
-    records.push({
-      year_month: cols[idx.year_month],
-      age: Number(cols[idx.age]),
-      male: Number(cols[idx.male]),
-      female: Number(cols[idx.female]),
-      total: Number(cols[idx.total]),
-    });
+    const year_month = cols[idx.year_month];
+    const age = Number(cols[idx.age]);
+    const male = Number(cols[idx.male]);
+    const female = Number(cols[idx.female]);
+    const total = Number(cols[idx.total]);
+    if (
+      typeof year_month !== "string" ||
+      year_month === "" ||
+      !Number.isFinite(age) ||
+      !Number.isFinite(male) ||
+      !Number.isFinite(female) ||
+      !Number.isFinite(total)
+    ) {
+      console.warn(`skipping unparseable row: ${lines[i]}`);
+      continue;
+    }
+    records.push({ year_month, age, male, female, total });
   }
   return records;
 }

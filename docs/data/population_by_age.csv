@@ -1,9 +1,0 @@
-year_month,age,male,female,total,source_url
-202401,0,50,48,98,https://example.com/a.pdf
-202401,1,52,49,101,https://example.com/a.pdf
-202401,15,60,58,118,https://example.com/a.pdf
-202401,65,30,35,65,https://example.com/a.pdf
-202402,0,49,47,96,https://example.com/b.pdf
-202402,1,53,50,103,https://example.com/b.pdf
-202402,15,61,59,120,https://example.com/b.pdf
-202402,65,31,36,67,https://example.com/b.pdf

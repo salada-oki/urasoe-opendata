@@ -77,3 +77,25 @@ test("summaryForMonth returns null for unknown month", () => {
   const records = parseCsvText(SAMPLE_CSV);
   assert.equal(summaryForMonth(records, "209912"), null);
 });
+
+test("parseCsvText skips a row with a non-numeric cell and keeps other rows", () => {
+  const csv = `year_month,age,male,female,total,source_url
+202401,0,50,48,98,https://example.com/a.pdf
+202401,not-a-number,52,49,101,https://example.com/a.pdf
+202401,15,60,58,118,https://example.com/a.pdf
+`;
+  const records = parseCsvText(csv);
+  assert.equal(records.length, 2);
+  assert.deepEqual(
+    records.map((r) => r.age),
+    [0, 15]
+  );
+});
+
+test("parseCsvText returns [] when the header is missing an expected column", () => {
+  const csv = `year_month,age,male,female,source_url
+202401,0,50,48,https://example.com/a.pdf
+`;
+  const records = parseCsvText(csv);
+  assert.deepEqual(records, []);
+});

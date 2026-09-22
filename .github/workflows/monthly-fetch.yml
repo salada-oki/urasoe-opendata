@@ -30,8 +30,12 @@ jobs:
 
       - name: Sync data to docs/ for GitHub Pages
         run: |
-          mkdir -p docs/data
-          cp data/population_by_age.csv docs/data/population_by_age.csv
+          if [ -f data/population_by_age.csv ]; then
+            mkdir -p docs/data
+            cp data/population_by_age.csv docs/data/population_by_age.csv
+          else
+            echo "data/population_by_age.csv がまだ存在しないためスキップ"
+          fi
 
       - name: Commit and push if changed
         run: |
