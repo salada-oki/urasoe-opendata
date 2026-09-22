@@ -30,6 +30,10 @@ GitHub Actions で毎月自動実行され、新しい月のデータが公開�
    自動実行され、新しい月のPDFが見つかれば `data/population_by_age.csv` に
    追記されます。
 
+5. リポジトリの **Settings → Pages** で、Source を「Deploy from a branch」、
+   Branch を `master` / `docs` フォルダに設定して保存する。数分後、
+   `https://<ユーザー名>.github.io/<リポジトリ名>/` でダッシュボードが公開される。
+
 ## データの形式
 
 `data/population_by_age.csv`
