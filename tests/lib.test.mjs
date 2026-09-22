@@ -61,16 +61,16 @@ test("ageGroupTotals aggregates into child/working/elderly buckets per month", (
   const records = parseCsvText(SAMPLE_CSV);
   const result = ageGroupTotals(records);
   assert.deepEqual(result, [
-    { year_month: "202401", child: 98, working: 118, elderly: 65, total: 281 },
-    { year_month: "202402", child: 96, working: 120, elderly: 67, total: 283 },
+    { year_month: "202401", child: 199, working: 118, elderly: 65, total: 382 },
+    { year_month: "202402", child: 199, working: 120, elderly: 67, total: 386 },
   ]);
 });
 
 test("summaryForMonth returns total and elderly rate", () => {
   const records = parseCsvText(SAMPLE_CSV);
   const result = summaryForMonth(records, "202401");
-  assert.equal(result.total, 281);
-  assert.ok(Math.abs(result.elderlyRate - 65 / 281) < 1e-9);
+  assert.equal(result.total, 382);
+  assert.ok(Math.abs(result.elderlyRate - 65 / 382) < 1e-9);
 });
 
 test("summaryForMonth returns null for unknown month", () => {

@@ -41,10 +41,9 @@ export function pyramidDataForMonth(records, ym) {
 }
 
 function ageGroupOf(age) {
-  if (age === 0) return "child";
-  if (age === 15) return "working";
-  if (age === 65) return "elderly";
-  return null;
+  if (age <= 14) return "child";
+  if (age <= 64) return "working";
+  return "elderly";
 }
 
 export function ageGroupTotals(records) {
@@ -54,11 +53,8 @@ export function ageGroupTotals(records) {
       byMonth.set(r.year_month, { year_month: r.year_month, child: 0, working: 0, elderly: 0, total: 0 });
     }
     const bucket = byMonth.get(r.year_month);
-    const group = ageGroupOf(r.age);
-    if (group) {
-      bucket[group] += r.total;
-      bucket.total += r.total;
-    }
+    bucket[ageGroupOf(r.age)] += r.total;
+    bucket.total += r.total;
   }
   return Array.from(byMonth.values()).sort((a, b) => (a.year_month < b.year_month ? -1 : 1));
 }
@@ -66,9 +62,7 @@ export function ageGroupTotals(records) {
 export function summaryForMonth(records, ym) {
   const rows = records.filter((r) => r.year_month === ym);
   if (rows.length === 0) return null;
-  const validRows = rows.filter((r) => ageGroupOf(r.age) !== null);
-  if (validRows.length === 0) return null;
-  const total = validRows.reduce((sum, r) => sum + r.total, 0);
-  const elderly = validRows.filter((r) => r.age >= 65).reduce((sum, r) => sum + r.total, 0);
+  const total = rows.reduce((sum, r) => sum + r.total, 0);
+  const elderly = rows.filter((r) => r.age >= 65).reduce((sum, r) => sum + r.total, 0);
   return { total, elderlyRate: elderly / total };
 }
