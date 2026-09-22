@@ -16,6 +16,11 @@ function showError(message) {
   errorEl.hidden = false;
 }
 
+function clearError() {
+  errorEl.hidden = true;
+  errorEl.textContent = "";
+}
+
 function formatPercent(rate) {
   return `${(rate * 100).toFixed(1)}%`;
 }
@@ -26,8 +31,9 @@ let trendChart;
 function renderPyramid(records, ym) {
   const { ages, male, female } = pyramidDataForMonth(records, ym);
   const ctx = document.getElementById("pyramid-chart");
+  const labels = ages.map((a) => (a === 105 ? "105+" : String(a)));
   const data = {
-    labels: ages,
+    labels,
     datasets: [
       { label: "男性", data: male.map((v) => -v), backgroundColor: "#4c72b0" },
       { label: "女性", data: female, backgroundColor: "#dd8452" },
@@ -36,7 +42,18 @@ function renderPyramid(records, ym) {
   const options = {
     indexAxis: "y",
     responsive: true,
-    scales: { x: { ticks: { callback: (v) => Math.abs(v) } } },
+    maintainAspectRatio: false,
+    scales: {
+      x: { stacked: true, ticks: { callback: (v) => Math.abs(v) } },
+      y: { stacked: true },
+    },
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${Math.abs(ctx.parsed.x)}`,
+        },
+      },
+    },
   };
   if (pyramidChart) {
     pyramidChart.data = data;
@@ -66,6 +83,7 @@ function renderTrend(records) {
 }
 
 function renderSummary(records, ym) {
+  clearError();
   const summary = summaryForMonth(records, ym);
   if (!summary) {
     totalEl.textContent = "-";
@@ -117,4 +135,4 @@ async function main() {
   onMonthChange(records);
 }
 
-main();
+main().catch(() => showError("データを読み込めませんでした。しばらくしてから再度お試しください。"));
