@@ -31,8 +31,11 @@ import requests
 # 複数の候補URLパターンを順番に試す。
 URL_TEMPLATES = [
     "https://cms.city.urasoe.lg.jp/doc/2024061900039/file_contents/{ym}nenrei-zentai.pdf",
-    "https://www.city.urasoe.lg.jp/doc/6656ca9e699259328fa9f8bc/file_contents/{ym}nenrei-zentai.pdf",
-    "https://www.city.urasoe.lg.jp/doc/6656ccbe699259328fa9f972/file_contents/{ym}nenrei-zentai.pdf",
+    "https://www.city.urasoe.lg.jp/doc/2026081000058/file_contents/{ym}nenrei-zentai.pdf",  # 令和7年(2025)
+    "https://www.city.urasoe.lg.jp/doc/2026081000041/file_contents/{ym}nenrei-zentai.pdf",  # 令和6年(2024)
+    "https://www.city.urasoe.lg.jp/doc/6656c72c699259328fa9f750/file_contents/{ym}nenrei-zentai.pdf",  # 令和5年(2023)
+    "https://www.city.urasoe.lg.jp/doc/6656ca9e699259328fa9f8bc/file_contents/{ym}nenrei-zentai.pdf",  # 令和4年(2022)
+    "https://www.city.urasoe.lg.jp/doc/6656ccbe699259328fa9f972/file_contents/{ym}nenrei-zentai.pdf",  # 令和3年(2021)
 ]
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
