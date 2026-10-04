@@ -68,6 +68,20 @@
       </div>
     </section>
 
+    <section id="district-section">
+      <h2>地区別人口ランキング</h2>
+      <p class="district-note">選択した年月の、市内の地区ごとの値です。地区別データは市の別の公開ファイルに基づくため、地区の合計が上の総人口と数十人ずれることがあります。</p>
+      <label for="district-metric">並べる指標</label>
+      <select id="district-metric">
+        <option value="total">総人口</option>
+        <option value="elderlyRate">高齢化率</option>
+      </select>
+      <p class="district-message" id="district-message" hidden></p>
+      <div id="district-chart-wrap" style="height: 900px;">
+        <canvas id="district-chart"></canvas>
+      </div>
+    </section>
+
     <section id="trend-section">
       <h2>世代別 人口推移</h2>
       <p class="trend-note">3つのグラフは縦軸の目盛り幅をそろえているので、線の傾きで増減の大きさを比べられます。</p>

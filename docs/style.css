@@ -141,3 +141,19 @@ canvas {
   margin-block-end: 0.5rem;
 }
 
+.district-note {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin-block: 0 0.75rem;
+}
+
+#district-metric {
+  margin-inline-start: 0.5rem;
+}
+
+.district-message {
+  margin-block: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
