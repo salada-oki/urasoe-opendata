@@ -29,9 +29,11 @@ jobs:
         run: python scripts/urasoe_population.py latest --lookback 3
 
       - name: Fetch latest district months
+        if: ${{ !cancelled() }}
         run: python scripts/urasoe_district_population.py latest --lookback 3
 
       - name: Sync data to docs/ for GitHub Pages
+        if: ${{ !cancelled() }}
         run: |
           mkdir -p docs/data
           for f in population_by_age.csv district_population.csv; do
@@ -43,6 +45,7 @@ jobs:
           done
 
       - name: Commit and push if changed
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
