@@ -9,6 +9,8 @@ import {
   summaryForMonth,
   sharedScaleRanges,
   trendReport,
+  parseDistrictCsvText,
+  districtRankingForMonth,
 } from "../docs/lib.js";
 
 const SAMPLE_CSV = `year_month,age,male,female,total,source_url
@@ -185,4 +187,102 @@ test("parseCsvText returns [] when the header is missing an expected column", ()
 `;
   const records = parseCsvText(csv);
   assert.deepEqual(records, []);
+});
+
+const DISTRICT_CSV = `year_month,district,total,male,female,households,child,working,elderly
+202301,仲間,100,50,50,40,20,60,20
+202301,牧港,300,150,150,120,30,200,70
+202301,キャンプキンザー,10,5,5,4,0,4,6
+202302,仲間,101,50,51,40,20,61,20
+`;
+
+test("parseDistrictCsvText parses the normalized district file into typed records", () => {
+  const records = parseDistrictCsvText(DISTRICT_CSV);
+  assert.equal(records.length, 4);
+  assert.deepEqual(records[0], {
+    year_month: "202301",
+    district: "仲間",
+    total: 100,
+    male: 50,
+    female: 50,
+    households: 40,
+    child: 20,
+    working: 60,
+    elderly: 20,
+  });
+});
+
+test("parseDistrictCsvText reads quoted values containing commas and quotes", () => {
+  const csv = `year_month,district,total,male,female,households,child,working,elderly
+202301,"浦添,""テスト""団地",10,5,5,4,1,8,1
+`;
+  assert.equal(parseDistrictCsvText(csv)[0].district, '浦添,"テスト"団地');
+});
+
+test("parseDistrictCsvText skips rows with empty or non-numeric cells", () => {
+  const csv = `year_month,district,total,male,female,households,child,working,elderly
+202301,仲間,,50,50,40,20,60,20
+202301,牧港,x,150,150,120,30,200,70
+202301,城間,10,5,5,4,1,8,1
+`;
+  assert.deepEqual(
+    parseDistrictCsvText(csv).map((r) => r.district),
+    ["城間"]
+  );
+});
+
+test("parseDistrictCsvText returns [] when a required column is missing", () => {
+  const csv = `year_month,district,total
+202301,仲間,100
+`;
+  assert.deepEqual(parseDistrictCsvText(csv), []);
+});
+
+test("districtRankingForMonth sorts districts by total population, largest first", () => {
+  const ranking = districtRankingForMonth(parseDistrictCsvText(DISTRICT_CSV), "202301", "total");
+  assert.deepEqual(ranking, [
+    { district: "牧港", value: 300, total: 300 },
+    { district: "仲間", value: 100, total: 100 },
+    { district: "キャンプキンザー", value: 10, total: 10 },
+  ]);
+});
+
+test("districtRankingForMonth sorts by elderly rate and keeps each district's population", () => {
+  const ranking = districtRankingForMonth(parseDistrictCsvText(DISTRICT_CSV), "202301", "elderlyRate");
+  assert.deepEqual(
+    ranking.map((r) => r.district),
+    ["キャンプキンザー", "牧港", "仲間"]
+  );
+  assert.equal(ranking[0].value, 6 / 10);
+  assert.equal(ranking[0].total, 10);
+});
+
+test("districtRankingForMonth breaks ties by district name", () => {
+  const csv = `year_month,district,total,male,female,households,child,working,elderly
+202301,い地区,10,5,5,4,1,8,1
+202301,あ地区,10,5,5,4,1,8,1
+`;
+  assert.deepEqual(
+    districtRankingForMonth(parseDistrictCsvText(csv), "202301", "total").map((r) => r.district),
+    ["あ地区", "い地区"]
+  );
+});
+
+test("districtRankingForMonth leaves out zero-population districts when ranking by rate", () => {
+  const csv = `year_month,district,total,male,female,households,child,working,elderly
+202301,空き地区,0,0,0,0,0,0,0
+202301,仲間,10,5,5,4,1,8,1
+`;
+  assert.deepEqual(
+    districtRankingForMonth(parseDistrictCsvText(csv), "202301", "elderlyRate").map((r) => r.district),
+    ["仲間"]
+  );
+});
+
+test("districtRankingForMonth returns [] for a month with no district data", () => {
+  assert.deepEqual(districtRankingForMonth(parseDistrictCsvText(DISTRICT_CSV), "202212", "total"), []);
+});
+
+test("districtRankingForMonth rejects an unknown metric", () => {
+  assert.throws(() => districtRankingForMonth([], "202301", "households"), /unknown metric/);
 });

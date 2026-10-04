@@ -180,3 +180,76 @@ export function summaryForMonth(records, ym) {
   const elderly = rows.filter((r) => r.age >= 65).reduce((sum, r) => sum + r.total, 0);
   return { total, elderlyRate: elderly / total };
 }
+
+const DISTRICT_NUMERIC_FIELDS = ["total", "male", "female", "households", "child", "working", "elderly"];
+
+// Python's csv module quotes a value only when it contains a comma, quote or
+// newline; this handles that quoting ("" is an escaped quote).
+function splitCsvLine(line) {
+  const cells = [];
+  let cell = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"' && line[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (ch === '"') {
+        inQuotes = false;
+      } else {
+        cell += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      cells.push(cell);
+      cell = "";
+    } else {
+      cell += ch;
+    }
+  }
+  cells.push(cell);
+  return cells;
+}
+
+const toNumber = (s) => (s === undefined || s.trim() === "" ? NaN : Number(s));
+
+export function parseDistrictCsvText(text) {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim() !== "");
+  if (lines.length === 0) return [];
+  const header = splitCsvLine(lines[0]);
+  const fields = ["year_month", "district", ...DISTRICT_NUMERIC_FIELDS];
+  const idx = Object.fromEntries(fields.map((f) => [f, header.indexOf(f)]));
+  if (fields.some((f) => idx[f] === -1)) {
+    console.warn("parseDistrictCsvText: missing required column in header");
+    return [];
+  }
+  const records = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCsvLine(lines[i]);
+    const record = {
+      year_month: (cols[idx.year_month] ?? "").trim(),
+      district: (cols[idx.district] ?? "").trim(),
+    };
+    for (const f of DISTRICT_NUMERIC_FIELDS) record[f] = toNumber(cols[idx[f]]);
+    if (!record.year_month || !record.district || DISTRICT_NUMERIC_FIELDS.some((f) => !Number.isFinite(record[f]))) {
+      console.warn(`skipping unparseable district row: ${lines[i]}`);
+      continue;
+    }
+    records.push(record);
+  }
+  return records;
+}
+
+export function districtRankingForMonth(records, ym, metric) {
+  if (metric !== "total" && metric !== "elderlyRate") throw new Error(`unknown metric: ${metric}`);
+  return records
+    .filter((r) => r.year_month === ym && (metric === "total" || r.total > 0))
+    .map((r) => ({
+      district: r.district,
+      value: metric === "total" ? r.total : r.elderly / r.total,
+      total: r.total,
+    }))
+    .sort((a, b) => b.value - a.value || a.district.localeCompare(b.district, "ja"));
+}
