@@ -16,46 +16,31 @@ data/population_by_age.csv に年齢別（0〜105+）・男女別・年月別で
 """
 
 import argparse
-import csv
-import datetime
 import io
 import re
 import sys
 import time
-from pathlib import Path
 
 import pdfplumber
-import requests
 
-# 浦添市サイトのリニューアルでファイルの格納先が変わっているため、
-# 複数の候補URLパターンを順番に試す。
-URL_TEMPLATES = [
-    "https://cms.city.urasoe.lg.jp/doc/2024061900039/file_contents/{ym}nenrei-zentai.pdf",
-    "https://www.city.urasoe.lg.jp/doc/2026081000058/file_contents/{ym}nenrei-zentai.pdf",  # 令和7年(2025)
-    "https://www.city.urasoe.lg.jp/doc/2026081000041/file_contents/{ym}nenrei-zentai.pdf",  # 令和6年(2024)
-    "https://www.city.urasoe.lg.jp/doc/6656c72c699259328fa9f750/file_contents/{ym}nenrei-zentai.pdf",  # 令和5年(2023)
-    "https://www.city.urasoe.lg.jp/doc/6656ca9e699259328fa9f8bc/file_contents/{ym}nenrei-zentai.pdf",  # 令和4年(2022)
-    "https://www.city.urasoe.lg.jp/doc/6656ccbe699259328fa9f972/file_contents/{ym}nenrei-zentai.pdf",  # 令和3年(2021)
-]
+from urasoe_common import (
+    DATA_DIR,
+    append_records,
+    fetch_first,
+    load_existing_year_months,
+    month_iter,
+    recent_months,
+)
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CSV_PATH = DATA_DIR / "population_by_age.csv"
+FIELDNAMES = ["year_month", "age", "male", "female", "total", "source_url"]
 
 NUM_RE = re.compile(r"^[\d,]+$")
 
 
 def fetch_pdf_bytes(ym: str):
     """指定年月(YYYYMM)のPDFを候補URLから探して取得する。見つからなければ (None, None)。"""
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; urasoe-opendata-bot/1.0)"}
-    for tmpl in URL_TEMPLATES:
-        url = tmpl.format(ym=ym)
-        try:
-            r = requests.get(url, headers=headers, timeout=20)
-        except requests.RequestException:
-            continue
-        if r.status_code == 200 and r.content[:4] == b"%PDF":
-            return r.content, url
-    return None, None
+    return fetch_first(ym, "nenrei-zentai.pdf", lambda content: content[:4] == b"%PDF")
 
 
 def parse_pdf(pdf_bytes: bytes, ym: str, source_url: str):
@@ -120,39 +105,9 @@ def parse_pdf(pdf_bytes: bytes, ym: str, source_url: str):
     return records
 
 
-def month_iter(start_ym: str, end_ym: str):
-    y, m = int(start_ym[:4]), int(start_ym[5:7])
-    ey, em = int(end_ym[:4]), int(end_ym[5:7])
-    while (y, m) <= (ey, em):
-        yield f"{y}{m:02d}"
-        m += 1
-        if m > 12:
-            m = 1
-            y += 1
-
-
-def load_existing_year_months():
-    if not CSV_PATH.exists():
-        return set()
-    with CSV_PATH.open(newline="", encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        return {row["year_month"] for row in reader}
-
-
-def append_records(records):
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    file_exists = CSV_PATH.exists()
-    with CSV_PATH.open("a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f, fieldnames=["year_month", "age", "male", "female", "total", "source_url"]
-        )
-        if not file_exists:
-            writer.writeheader()
-        writer.writerows(records)
-
 
 def process_months(year_months, skip_existing=True, sleep_sec=1.0):
-    existing = load_existing_year_months() if skip_existing else set()
+    existing = load_existing_year_months(CSV_PATH) if skip_existing else set()
     total_added = 0
     for ym in year_months:
         if ym in existing:
@@ -172,7 +127,7 @@ def process_months(year_months, skip_existing=True, sleep_sec=1.0):
         missing = sorted(set(range(0, 100)) - got_ages)
         if missing:
             print(f"[warn] {ym} は 0〜99歳のうち {len(missing)}件が欠落: {missing}")
-        append_records(records)
+        append_records(CSV_PATH, FIELDNAMES, records)
         total_added += len(records)
         print(f"[ok]   {ym} : {len(records)}行 追加 ({url})")
         time.sleep(sleep_sec)  # サーバーへの負荷配慮
@@ -185,17 +140,7 @@ def cmd_backfill(args):
 
 
 def cmd_latest(args):
-    today = datetime.date.today()
-    year_months = []
-    y, m = today.year, today.month
-    for _ in range(args.lookback):
-        year_months.append(f"{y}{m:02d}")
-        m -= 1
-        if m == 0:
-            m = 12
-            y -= 1
-    year_months.reverse()
-    process_months(year_months, skip_existing=not args.force)
+    process_months(recent_months(args.lookback), skip_existing=not args.force)
 
 
 def main():
