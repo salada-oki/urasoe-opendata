@@ -100,6 +100,32 @@ export function ageGroupTotals(records) {
   return Array.from(byMonth.values()).sort((a, b) => (a.year_month < b.year_month ? -1 : 1));
 }
 
+function niceStep(raw) {
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  return [1, 2, 5, 10].map((m) => m * magnitude).find((s) => s >= raw);
+}
+
+// Same tick step and same vertical span for every series, each positioned
+// over its own values, so slopes are comparable across separately-drawn charts.
+export function sharedScaleRanges(totals, keys, targetTicks = 5) {
+  const extents = keys.map((key) => {
+    const values = totals.map((t) => t[key]);
+    return { key, min: Math.min(...values), max: Math.max(...values) };
+  });
+  const maxSpan = Math.max(...extents.map((e) => e.max - e.min));
+  const step = niceStep(Math.max(maxSpan / targetTicks, 1));
+  const steps = Math.max(
+    1,
+    ...extents.map((e) => Math.ceil(e.max / step) - Math.floor(e.min / step))
+  );
+  const ranges = {};
+  for (const e of extents) {
+    const min = Math.floor(e.min / step) * step;
+    ranges[e.key] = { min, max: min + steps * step };
+  }
+  return { step, ranges };
+}
+
 export function summaryForMonth(records, ym) {
   const rows = records.filter((r) => r.year_month === ym);
   if (rows.length === 0) return null;

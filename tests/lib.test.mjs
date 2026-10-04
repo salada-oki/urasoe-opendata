@@ -7,6 +7,7 @@ import {
   pyramidDataByDecade,
   ageGroupTotals,
   summaryForMonth,
+  sharedScaleRanges,
 } from "../docs/lib.js";
 
 const SAMPLE_CSV = `year_month,age,male,female,total,source_url
@@ -90,6 +91,29 @@ test("summaryForMonth returns total and elderly rate", () => {
   const result = summaryForMonth(records, "202401");
   assert.equal(result.total, 382);
   assert.ok(Math.abs(result.elderlyRate - 65 / 382) < 1e-9);
+});
+
+test("sharedScaleRanges gives every series the same step and the same span", () => {
+  const totals = [
+    { a: 100, b: 1000 },
+    { a: 340, b: 1050 },
+  ];
+  // largest span is a (240) -> 240/5 = 48 -> nice step 50
+  // a: 100..350 (5 steps), b: 1000..1050 (1 step) -> common span 5 steps = 250
+  assert.deepEqual(sharedScaleRanges(totals, ["a", "b"]), {
+    step: 50,
+    ranges: {
+      a: { min: 100, max: 350 },
+      b: { min: 1000, max: 1250 },
+    },
+  });
+});
+
+test("sharedScaleRanges keeps at least one step when a series never changes", () => {
+  const totals = [{ a: 500 }, { a: 500 }];
+  const result = sharedScaleRanges(totals, ["a"]);
+  assert.ok(result.ranges.a.max > result.ranges.a.min);
+  assert.ok(result.ranges.a.min <= 500 && result.ranges.a.max >= 500);
 });
 
 test("summaryForMonth returns null for unknown month", () => {

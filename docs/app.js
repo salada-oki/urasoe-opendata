@@ -4,6 +4,7 @@ import {
   pyramidDataByDecade,
   ageGroupTotals,
   summaryForMonth,
+  sharedScaleRanges,
 } from "./lib.js";
 
 const GENERATION_COLORS = { child: "#4c72b0", working: "#55a868", elderly: "#c44e52" };
@@ -102,6 +103,7 @@ function renderGenerationPie(groupTotals, ym) {
 
 function renderTrend(totals) {
   const labels = totals.map((t) => t.year_month);
+  const { step, ranges } = sharedScaleRanges(totals, ["child", "working", "elderly"]);
   for (const key of ["child", "working", "elderly"]) {
     const ctx = document.getElementById(`trend-chart-${key}`);
     const data = {
@@ -119,6 +121,13 @@ function renderTrend(totals) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          min: ranges[key].min,
+          max: ranges[key].max,
+          ticks: { stepSize: step, callback: (v) => v.toLocaleString("ja-JP") },
+        },
+      },
     };
     if (trendCharts[key]) {
       trendCharts[key].data = data;
