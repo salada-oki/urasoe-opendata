@@ -61,7 +61,7 @@ function makeElement() {
 
 let caseCounter = 0;
 
-async function loadApp({ districtCsv }) {
+async function loadApp({ cityCsv = CITY_CSV, districtCsv }) {
   const elements = {
     "error-message": Object.assign(makeElement(), { hidden: true }),
     "district-metric": Object.assign(makeElement(), { value: "total" }),
@@ -81,7 +81,7 @@ async function loadApp({ districtCsv }) {
     update() {}
   };
   globalThis.fetch = async (url) => {
-    const body = url.includes("district_population") ? districtCsv : CITY_CSV;
+    const body = url.includes("district_population") ? districtCsv : cityCsv;
     if (body === null) return { ok: false, status: 404, text: async () => "" };
     return { ok: true, text: async () => body };
   };
@@ -147,4 +147,18 @@ test("every id app.js looks up exists in index.html", () => {
   const ids = [...app.matchAll(/getElementById\("([^"]+)"\)/g)].map((m) => m[1]);
   assert.ok(ids.includes("district-chart"));
   for (const id of ids) assert.ok(html.includes(`id="${id}"`), `index.html is missing id="${id}"`);
+});
+
+test("a district file with no usable rows shows the load-failure message", async () => {
+  const headerOnly = "year_month,district,total,male,female,households,child,working,elderly\n";
+  const { elements } = await loadApp({ districtCsv: headerOnly });
+  selectMonth(elements, "202301");
+  assert.equal(elements["district-message"].textContent, "地区別データを読み込めませんでした。");
+  assert.equal(elements["district-chart-wrap"].hidden, true);
+});
+
+test("if the city file fails to load, the district section is hidden", async () => {
+  const { elements } = await loadApp({ cityCsv: null, districtCsv: DISTRICT_CSV });
+  assert.equal(elements["error-message"].hidden, false);
+  assert.equal(elements["district-section"].hidden, true);
 });

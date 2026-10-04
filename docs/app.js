@@ -20,6 +20,7 @@ const totalEl = document.getElementById("summary-total");
 const metricEl = document.getElementById("district-metric");
 const districtMessageEl = document.getElementById("district-message");
 const districtChartWrap = document.getElementById("district-chart-wrap");
+const districtSection = document.getElementById("district-section");
 
 const cardEls = {
   child: {
@@ -39,6 +40,11 @@ const cardEls = {
 function showError(message) {
   errorEl.textContent = message;
   errorEl.hidden = false;
+}
+
+function showFatalError(message) {
+  showError(message);
+  districtSection.hidden = true;
 }
 
 function clearError() {
@@ -241,7 +247,7 @@ function districtTooltip(entry, isRate) {
 }
 
 function renderDistrict(records, ym, metric) {
-  if (records === null) {
+  if (records === null || records.length === 0) {
     showDistrictMessage("地区別データを読み込めませんでした。");
     return;
   }
@@ -332,18 +338,18 @@ async function main() {
   try {
     response = await fetch(`./data/population_by_age.csv?t=${Date.now()}`);
   } catch (err) {
-    showError("データを読み込めませんでした。しばらくしてから再度お試しください。");
+    showFatalError("データを読み込めませんでした。しばらくしてから再度お試しください。");
     return;
   }
   if (!response.ok) {
-    showError("データを読み込めませんでした。しばらくしてから再度お試しください。");
+    showFatalError("データを読み込めませんでした。しばらくしてから再度お試しください。");
     return;
   }
   const text = await response.text();
   const records = parseCsvText(text);
   const months = listYearMonths(records);
   if (months.length === 0) {
-    showError("表示できるデータがありません");
+    showFatalError("表示できるデータがありません");
     return;
   }
 
@@ -377,4 +383,4 @@ async function main() {
   renderDistrictForSelection();
 }
 
-main().catch(() => showError("データを読み込めませんでした。しばらくしてから再度お試しください。"));
+main().catch(() => showFatalError("データを読み込めませんでした。しばらくしてから再度お試しください。"));
