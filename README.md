@@ -16,6 +16,7 @@ GitHub Actions で毎月自動実行され、新しい月のデータが公開�
    ```bash
    pip install -r requirements.txt
    python scripts/urasoe_population.py backfill --start 2021-01 --end 2026-09
+   python scripts/urasoe_district_population.py backfill --start 2023-01 --end 2026-09
    git add data/
    git commit -m "chore: initial backfill"
    git push
@@ -47,13 +48,30 @@ GitHub Actions で毎月自動実行され、新しい月のデータが公開�
 | total | 合計人口（male + female） |
 | source_url | 元PDFのURL |
 
+`data/district_population.csv`(行政区別、2023年1月分以降)
+
+| 列 | 内容 |
+|---|---|
+| year_month | 集計年月(例: `202608`) |
+| district | 行政区の名前(例: `仲間`)。市全体の合計行は含まない |
+| total / male / female | 総人口・男性・女性 |
+| households | 世帯数 |
+| child / working / elderly | 年少(0-14)・生産年齢(15-64)・高齢(65以上) |
+
+市の「地域・年齢別人口」オープンデータCSV(`{年月}opendata.csv`、Shift-JIS)を
+`scripts/urasoe_district_population.py` が取り込んで作る。このCSVは2023年1月分から
+しか公開されていないため、市全体のデータ(2021年1月〜)より開始が遅い。
+
 ## 既知の注意点
 
-- 浦添市サイトのURL構造が過去に変わっているため、スクリプトは複数の候補URL
-  パターンを順に試します。将来的にまたURLが変わった場合は
-  `scripts/urasoe_population.py` の `URL_TEMPLATES` にパターンを追加してください。
+- 浦添市サイトはファイルの置き場所のページが年ごとに変わるため、スクリプトは
+  複数の候補URLを順に試します。新しい年のページができたら
+  `scripts/urasoe_common.py` の `BASE_URLS` に1行追加すれば、
+  市全体・地区別の両方のスクリプトが対応します。
 - PDFのレイアウト上の理由で、まれに一部の年齢行の抽出がずれることがあります。
   `male + female == total` の整合性チェックで自動的に弾いていますが、
   実行ログに `[warn] ... 欠落` が出た場合は該当月を手動確認してください。
 - 市の公開日が不定なため、直近3ヶ月分を毎回再チェックする設計にしています
   （`--lookback 3`）。取得済みの月はスキップされるので重複は発生しません。
+- テストの実行: `python -m unittest discover -s tests -p "test_*.py"`(Python)、
+  `node --test tests/lib.test.mjs tests/app_smoke.test.mjs`(JavaScript)

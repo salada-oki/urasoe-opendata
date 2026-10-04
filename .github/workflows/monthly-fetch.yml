@@ -28,14 +28,19 @@ jobs:
       - name: Fetch latest months
         run: python scripts/urasoe_population.py latest --lookback 3
 
+      - name: Fetch latest district months
+        run: python scripts/urasoe_district_population.py latest --lookback 3
+
       - name: Sync data to docs/ for GitHub Pages
         run: |
-          if [ -f data/population_by_age.csv ]; then
-            mkdir -p docs/data
-            cp data/population_by_age.csv docs/data/population_by_age.csv
-          else
-            echo "data/population_by_age.csv がまだ存在しないためスキップ"
-          fi
+          mkdir -p docs/data
+          for f in population_by_age.csv district_population.csv; do
+            if [ -f "data/$f" ]; then
+              cp "data/$f" "docs/data/$f"
+            else
+              echo "data/$f がまだ存在しないためスキップ"
+            fi
+          done
 
       - name: Commit and push if changed
         run: |
