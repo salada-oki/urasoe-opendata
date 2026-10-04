@@ -111,6 +111,8 @@ def parse_opendata_csv(text, ym):
     district_sum = sum(r["total"] for r in records)
     if city_total is not None and city_total != district_sum:
         warnings.append(f"地区の合計({district_sum})が「{TOTAL_ROW_NAME}」行({city_total})と一致しません")
+    if city_total is None and records:
+        warnings.append(f"「{TOTAL_ROW_NAME}」行がありません(ファイルが途中で切れている可能性があります)")
     return records, warnings
 
 

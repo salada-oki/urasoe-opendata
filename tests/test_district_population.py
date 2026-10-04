@@ -59,9 +59,15 @@ def make_csv(rows, header=HEADER):
 
 class ParseOpendataCsvTest(unittest.TestCase):
     def test_sums_age_bands_into_three_generations(self):
-        records, warnings = district.parse_opendata_csv(make_csv([make_row("仲間", NAKAMA_BANDS, 20)]), "202608")
+        rows = [make_row("仲間", NAKAMA_BANDS, 20), make_row("全体", NAKAMA_BANDS, 20)]
+        records, warnings = district.parse_opendata_csv(make_csv(rows), "202608")
         self.assertEqual(records, [NAKAMA_RECORD])
         self.assertEqual(warnings, [])
+
+    def test_warns_when_city_total_row_is_missing(self):
+        records, warnings = district.parse_opendata_csv(make_csv([make_row("仲間", NAKAMA_BANDS, 20)]), "202608")
+        self.assertEqual(records, [NAKAMA_RECORD])
+        self.assertTrue(any("全体" in w for w in warnings))
 
     def test_excludes_city_total_row(self):
         rows = [make_row("仲間", NAKAMA_BANDS, 20), make_row("全体", NAKAMA_BANDS, 20)]
