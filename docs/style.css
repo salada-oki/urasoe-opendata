@@ -106,6 +106,30 @@ canvas {
   }
 }
 
+.report-period {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin-block: 0 0.75rem;
+}
+
+.report-list {
+  padding-inline-start: 1.2rem;
+  line-height: 1.8;
+}
+
+.report-list li + li {
+  margin-block-start: 0.5rem;
+}
+
+.report-list strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.report-note {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
 .trend-note {
   font-size: 0.85rem;
   opacity: 0.75;

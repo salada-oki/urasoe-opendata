@@ -5,6 +5,7 @@ import {
   ageGroupTotals,
   summaryForMonth,
   sharedScaleRanges,
+  trendReport,
 } from "./lib.js";
 
 const GENERATION_COLORS = { child: "#4c72b0", working: "#55a868", elderly: "#c44e52" };
@@ -138,6 +139,78 @@ function renderTrend(totals) {
   }
 }
 
+const fmt = (n) => n.toLocaleString("ja-JP");
+const signed = (n) => (n > 0 ? `+${fmt(n)}` : n < 0 ? `−${fmt(-n)}` : "±0");
+const signedPct = (diff, base) => {
+  const p = (diff / base) * 100;
+  return `${p > 0 ? "+" : p < 0 ? "−" : "±"}${Math.abs(p).toFixed(1)}%`;
+};
+const ymLabel = (ym) => `${ym.slice(0, 4)}年${Number(ym.slice(4, 6))}月`;
+
+function strong(text) {
+  const el = document.createElement("strong");
+  el.textContent = text;
+  return el;
+}
+
+function listItem(...parts) {
+  const el = document.createElement("li");
+  el.append(...parts);
+  return el;
+}
+
+function renderTrendReport(records) {
+  const section = document.getElementById("trend-report");
+  const report = trendReport(records);
+  if (!report) {
+    section.hidden = true;
+    return;
+  }
+  const { generations: g } = report;
+  const years = Math.floor(report.months / 12);
+  const rest = report.months % 12;
+  const duration = `${years > 0 ? `${years}年` : ""}${rest > 0 ? `${rest}か月` : ""}`;
+  document.getElementById("report-period").textContent =
+    `${ymLabel(report.from)}〜${ymLabel(report.to)}(${duration})の変化です。年月の選択に関係なく、データの最初と最新の月を比べています。`;
+
+  const totalPct = (g.total.diff / g.total.from) * 100;
+  const totalWord = Math.abs(totalPct) < 1 ? "ほぼ横ばいです" : g.total.diff > 0 ? "増えました" : "減りました";
+  const offsetting =
+    g.child.diff < 0 &&
+    g.elderly.diff > 0 &&
+    Math.abs(g.child.diff + g.elderly.diff) < Math.max(-g.child.diff, g.elderly.diff) / 2;
+
+  const items = [
+    listItem(
+      "総人口は ", strong(`${signed(g.total.diff)}人`), `(${signedPct(g.total.diff, g.total.from)})で${totalWord}。`,
+      "内訳は 年少 ", strong(`${signed(g.child.diff)}人`),
+      "、生産年齢 ", strong(`${signed(g.working.diff)}人`),
+      "、高齢 ", strong(`${signed(g.elderly.diff)}人`), "。",
+      offsetting ? "年少の減少と高齢の増加が、ほぼ打ち消し合っています。" : ""
+    ),
+    listItem(
+      "1年あたりの増減は 年少 ", strong(`${signed(g.child.perYear)}人`),
+      "、高齢 ", strong(`${signed(g.elderly.perYear)}人`),
+      "。高齢化率は ", strong(`${(report.elderlyRate.from * 100).toFixed(1)}%`),
+      " から ", strong(`${(report.elderlyRate.to * 100).toFixed(1)}%`), " になりました。"
+    ),
+    listItem(
+      "0歳の人数は ", strong(`${fmt(report.age0.from)}人`), " から ", strong(`${fmt(report.age0.to)}人`),
+      `(${signedPct(report.age0.diff, report.age0.from)})。生まれる子の数の目安です。`
+    ),
+    listItem(
+      "65歳以上の内訳では、65〜74歳が ", strong(`${signed(report.youngOld.diff)}人`),
+      "、75歳以上が ", strong(`${signed(report.oldOld.diff)}人`), "。"
+    ),
+    listItem(
+      "40代は ", strong(`${signed(report.forties.diff)}人`), "、50代は ", strong(`${signed(report.fifties.diff)}人`),
+      "。いま50代の ", strong(`${fmt(report.fifties.to)}人`), " は、今後6〜15年で65歳を迎えます。"
+    ),
+  ];
+  document.getElementById("report-list").replaceChildren(...items);
+  section.hidden = false;
+}
+
 function renderSummary(records, ym) {
   clearError();
   const summary = summaryForMonth(records, ym);
@@ -204,6 +277,7 @@ async function main() {
   selectEl.addEventListener("change", () => onMonthChange(records, groupTotals));
 
   renderTrend(groupTotals);
+  renderTrendReport(records);
   onMonthChange(records, groupTotals);
 }
 

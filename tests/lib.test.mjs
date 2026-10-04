@@ -8,6 +8,7 @@ import {
   ageGroupTotals,
   summaryForMonth,
   sharedScaleRanges,
+  trendReport,
 } from "../docs/lib.js";
 
 const SAMPLE_CSV = `year_month,age,male,female,total,source_url
@@ -114,6 +115,49 @@ test("sharedScaleRanges keeps at least one step when a series never changes", ()
   const result = sharedScaleRanges(totals, ["a"]);
   assert.ok(result.ranges.a.max > result.ranges.a.min);
   assert.ok(result.ranges.a.min <= 500 && result.ranges.a.max >= 500);
+});
+
+const TREND_CSV = `year_month,age,male,female,total,source_url
+202301,0,40,40,80,x
+202301,45,125,125,250,x
+202301,55,130,130,260,x
+202301,70,75,75,150,x
+202301,80,45,45,90,x
+202101,0,50,50,100,x
+202101,45,150,150,300,x
+202101,55,100,100,200,x
+202101,70,75,75,150,x
+202101,80,25,25,50,x
+`;
+
+test("trendReport compares the first and latest month regardless of row order", () => {
+  const report = trendReport(parseCsvText(TREND_CSV));
+  assert.equal(report.from, "202101");
+  assert.equal(report.to, "202301");
+  assert.equal(report.months, 24);
+  // 24 months apart -> per-year pace is half the total change
+  assert.deepEqual(report.generations, {
+    child: { from: 100, to: 80, diff: -20, perYear: -10 },
+    working: { from: 500, to: 510, diff: 10, perYear: 5 },
+    elderly: { from: 200, to: 240, diff: 40, perYear: 20 },
+    total: { from: 800, to: 830, diff: 30, perYear: 15 },
+  });
+  assert.equal(report.elderlyRate.from, 200 / 800);
+  assert.equal(report.elderlyRate.to, 240 / 830);
+});
+
+test("trendReport breaks out age 0, 65-74 vs 75+, and 40s vs 50s", () => {
+  const report = trendReport(parseCsvText(TREND_CSV));
+  assert.deepEqual(report.age0, { from: 100, to: 80, diff: -20 });
+  assert.deepEqual(report.youngOld, { from: 150, to: 150, diff: 0 });
+  assert.deepEqual(report.oldOld, { from: 50, to: 90, diff: 40 });
+  assert.deepEqual(report.forties, { from: 300, to: 250, diff: -50 });
+  assert.deepEqual(report.fifties, { from: 200, to: 260, diff: 60 });
+});
+
+test("trendReport returns null when there is only one month", () => {
+  const records = parseCsvText(TREND_CSV).filter((r) => r.year_month === "202101");
+  assert.equal(trendReport(records), null);
 });
 
 test("summaryForMonth returns null for unknown month", () => {

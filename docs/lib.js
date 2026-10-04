@@ -126,6 +126,53 @@ export function sharedScaleRanges(totals, keys, targetTicks = 5) {
   return { step, ranges };
 }
 
+function monthsBetween(fromYm, toYm) {
+  const toIndex = (ym) => Number(ym.slice(0, 4)) * 12 + Number(ym.slice(4, 6));
+  return toIndex(toYm) - toIndex(fromYm);
+}
+
+function sumAges(records, ym, lo, hi) {
+  return records
+    .filter((r) => r.year_month === ym && r.age >= lo && r.age <= hi)
+    .reduce((sum, r) => sum + r.total, 0);
+}
+
+export function trendReport(records) {
+  const months = listYearMonths(records);
+  if (months.length < 2) return null;
+  const from = months[0];
+  const to = months[months.length - 1];
+  const span = monthsBetween(from, to);
+
+  const totals = ageGroupTotals(records);
+  const first = totals.find((t) => t.year_month === from);
+  const last = totals.find((t) => t.year_month === to);
+  const generations = {};
+  for (const key of ["child", "working", "elderly", "total"]) {
+    const diff = last[key] - first[key];
+    generations[key] = { from: first[key], to: last[key], diff, perYear: Math.round((diff / span) * 12) };
+  }
+
+  const compare = (lo, hi) => {
+    const a = sumAges(records, from, lo, hi);
+    const b = sumAges(records, to, lo, hi);
+    return { from: a, to: b, diff: b - a };
+  };
+
+  return {
+    from,
+    to,
+    months: span,
+    generations,
+    elderlyRate: { from: first.elderly / first.total, to: last.elderly / last.total },
+    age0: compare(0, 0),
+    youngOld: compare(65, 74),
+    oldOld: compare(75, Infinity),
+    forties: compare(40, 49),
+    fifties: compare(50, 59),
+  };
+}
+
 export function summaryForMonth(records, ym) {
   const rows = records.filter((r) => r.year_month === ym);
   if (rows.length === 0) return null;
