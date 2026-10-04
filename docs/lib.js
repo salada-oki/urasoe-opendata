@@ -54,6 +54,33 @@ export function pyramidDataForMonth(records, ym) {
   };
 }
 
+const DECADE_LABELS = [
+  "0-9", "10-19", "20-29", "30-39", "40-49",
+  "50-59", "60-69", "70-79", "80-89", "90-99", "100+",
+];
+
+function decadeLabelOf(age) {
+  if (age >= 100) return "100+";
+  const start = Math.floor(age / 10) * 10;
+  return `${start}-${start + 9}`;
+}
+
+export function pyramidDataByDecade(records, ym) {
+  const rows = records.filter((r) => r.year_month === ym);
+  if (rows.length === 0) return { ages: [], male: [], female: [] };
+  const buckets = new Map(DECADE_LABELS.map((label) => [label, { male: 0, female: 0 }]));
+  for (const r of rows) {
+    const bucket = buckets.get(decadeLabelOf(r.age));
+    bucket.male += r.male;
+    bucket.female += r.female;
+  }
+  return {
+    ages: DECADE_LABELS,
+    male: DECADE_LABELS.map((label) => buckets.get(label).male),
+    female: DECADE_LABELS.map((label) => buckets.get(label).female),
+  };
+}
+
 function ageGroupOf(age) {
   if (age <= 14) return "child";
   if (age <= 64) return "working";

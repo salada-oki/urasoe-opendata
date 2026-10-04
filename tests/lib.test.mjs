@@ -4,6 +4,7 @@ import {
   parseCsvText,
   listYearMonths,
   pyramidDataForMonth,
+  pyramidDataByDecade,
   ageGroupTotals,
   summaryForMonth,
 } from "../docs/lib.js";
@@ -54,6 +55,24 @@ test("pyramidDataForMonth filters and sorts by age for the given month", () => {
 test("pyramidDataForMonth returns empty arrays for unknown month", () => {
   const records = parseCsvText(SAMPLE_CSV);
   const result = pyramidDataForMonth(records, "209912");
+  assert.deepEqual(result, { ages: [], male: [], female: [] });
+});
+
+test("pyramidDataByDecade buckets ages into fixed 10-year labels for the given month", () => {
+  const records = parseCsvText(SAMPLE_CSV);
+  const result = pyramidDataByDecade(records, "202401");
+  assert.deepEqual(result.ages, [
+    "0-9", "10-19", "20-29", "30-39", "40-49",
+    "50-59", "60-69", "70-79", "80-89", "90-99", "100+",
+  ]);
+  // age0(50/48) + age1(52/49) -> "0-9"; age15(60/58) -> "10-19"; age65(30/35) -> "60-69"
+  assert.deepEqual(result.male, [102, 60, 0, 0, 0, 0, 30, 0, 0, 0, 0]);
+  assert.deepEqual(result.female, [97, 58, 0, 0, 0, 0, 35, 0, 0, 0, 0]);
+});
+
+test("pyramidDataByDecade returns empty arrays for unknown month", () => {
+  const records = parseCsvText(SAMPLE_CSV);
+  const result = pyramidDataByDecade(records, "209912");
   assert.deepEqual(result, { ages: [], male: [], female: [] });
 });
 

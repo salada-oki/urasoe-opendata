@@ -20,17 +20,70 @@ body {
 
 #summary {
   display: flex;
-  gap: 2rem;
-  margin-block: 1rem;
-}
-
-#summary div {
-  display: flex;
   flex-direction: column;
+  margin-block: 1rem;
 }
 
 #summary strong {
   font-size: 1.5rem;
+}
+
+#generation-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-block: 1rem;
+}
+
+@media (max-width: 500px) {
+  #generation-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gen-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+  padding: 1rem 0.5rem;
+  border-radius: 8px;
+  border-top: 4px solid transparent;
+  background: color-mix(in srgb, var(--gen-color) 12%, transparent);
+}
+
+.gen-child {
+  --gen-color: #4c72b0;
+  border-top-color: var(--gen-color);
+}
+
+.gen-working {
+  --gen-color: #55a868;
+  border-top-color: var(--gen-color);
+}
+
+.gen-elderly {
+  --gen-color: #c44e52;
+  border-top-color: var(--gen-color);
+}
+
+.gen-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.gen-label {
+  font-size: 0.85rem;
+}
+
+.gen-count {
+  font-size: 1.4rem;
+}
+
+.gen-rate {
+  font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 section {
@@ -40,3 +93,21 @@ section {
 canvas {
   max-width: 100%;
 }
+
+#trend-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  #trend-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.trend-item h3 {
+  font-size: 0.95rem;
+  margin-block-end: 0.5rem;
+}
+

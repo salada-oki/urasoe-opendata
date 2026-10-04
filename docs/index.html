@@ -22,26 +22,67 @@
     </section>
 
     <section id="summary">
-      <div>
-        <span>総人口</span>
-        <strong id="summary-total">-</strong>
+      <span>総人口</span>
+      <strong id="summary-total">-</strong>
+    </section>
+
+    <section id="generation-cards">
+      <div class="gen-card gen-child">
+        <span class="gen-icon" aria-hidden="true">👶</span>
+        <span class="gen-label">年少人口<br>(0-14歳)</span>
+        <strong class="gen-count" id="card-child-count">-</strong>
+        <span class="gen-rate" id="card-child-rate">-</span>
       </div>
-      <div>
-        <span>高齢化率</span>
-        <strong id="summary-elderly-rate">-</strong>
+      <div class="gen-card gen-working">
+        <span class="gen-icon" aria-hidden="true">🧑‍💼</span>
+        <span class="gen-label">生産年齢人口<br>(15-64歳)</span>
+        <strong class="gen-count" id="card-working-count">-</strong>
+        <span class="gen-rate" id="card-working-rate">-</span>
+      </div>
+      <div class="gen-card gen-elderly">
+        <span class="gen-icon" aria-hidden="true">👴</span>
+        <span class="gen-label">高齢人口<br>(65歳以上)</span>
+        <strong class="gen-count" id="card-elderly-count">-</strong>
+        <span class="gen-rate" id="card-elderly-rate">-</span>
+      </div>
+    </section>
+
+    <section id="generation-pie-section">
+      <h2>世代別の割合</h2>
+      <div style="height: 320px;">
+        <canvas id="generation-pie-chart"></canvas>
       </div>
     </section>
 
     <section id="pyramid-section">
-      <h2>年齢別人口ピラミッド</h2>
-      <div style="height: 1400px;">
+      <h2>年齢別人口ピラミッド(年代別・10歳刻み)</h2>
+      <div style="height: 500px;">
         <canvas id="pyramid-chart"></canvas>
       </div>
     </section>
 
     <section id="trend-section">
-      <h2>年齢区分別 人口推移</h2>
-      <canvas id="trend-chart"></canvas>
+      <h2>世代別 人口推移</h2>
+      <div id="trend-grid">
+        <div class="trend-item">
+          <h3>年少人口(0-14歳)</h3>
+          <div style="height: 220px;">
+            <canvas id="trend-chart-child"></canvas>
+          </div>
+        </div>
+        <div class="trend-item">
+          <h3>生産年齢人口(15-64歳)</h3>
+          <div style="height: 220px;">
+            <canvas id="trend-chart-working"></canvas>
+          </div>
+        </div>
+        <div class="trend-item">
+          <h3>高齢人口(65歳以上)</h3>
+          <div style="height: 220px;">
+            <canvas id="trend-chart-elderly"></canvas>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
